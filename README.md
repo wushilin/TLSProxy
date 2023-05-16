@@ -31,6 +31,56 @@ NOTE: It only support TLS with SNI enabled (e.g. most of the TLS protocols)
 # Does it breach the security TLS?
 No. It decodes the `clientHello` message, and the whole traffic of the actual protocol is still confidential.
 
+# ACL
+The program supports ACL in simple JSON configuration.
+
+Example:
+```json
+{
+  "clients": {
+    "group1": [
+      "host:127.0.0.1",
+      "host:c02dr0c3md6t.home.arpa",
+      "cidr:192.168.144.0/24",
+      "pattern:192\\.168\\.144\\..*"
+    ]
+  },
+  "targets": {
+    "sgroup1": [
+      "host:www.google.com",
+      "pattern:.*\\.goo1gle\\.com"
+    ]
+  },
+  "rules": [
+    {
+      "client": ["group1"],
+      "target": ["sgroup1"],
+      "decision": "allow"
+    },
+    {
+      "client": ["$any"],
+      "target": ["$any"],
+      "decision": "deny"
+    },
+    {
+      "decision": "allow"
+    }
+  ]
+}
+```
+
+The clients are classified as clients group. Client belong to group if and only if at least 1 group rule matched client address.
+
+* host:xxxxxx -> Client Host name matched exactly to the value, by hostname, or by IP Address (both evaluated)
+* cidr:x.x.x.x/xx -> CIDR notation of client IP address matches
+* pattern: xxxx -> Regular expression matched by client host name, or IP Address
+
+Similarly, the targets are destination servers. Matched using similar rule. Targets does not support CIDR as they are host based.
+
+Rules are evaluated in order, when first rule that gives a "allow", "deny" decision, the evaluation stopps.
+
+Pre-defined special host groups `$any`. They match any host, any client.
+
 # Building
 Build this program by:
 
