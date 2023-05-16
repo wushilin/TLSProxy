@@ -33,7 +33,7 @@ dependencies {
 }
 tasks {
     named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
-        archiveBaseName.set("shadow")
+        archiveBaseName.set("tlsproxy")
         mergeServiceFiles()
         manifest {
             attributes(mapOf("Main-Class" to "MainKt"))
