@@ -91,6 +91,7 @@ $ ./gradlew clean shadowJar
 The built artifact is in `build/libs/tlsproxy-1.0-SNAPSHOT-all.jar`
 
 # Executing
+## Running without ACLs (all connection allowed)
 ```bash
 $ java -jar tlsproxy-1.0-SNAPSHOT-all.jar -p 1443:443 -p 9092
 ```
@@ -99,6 +100,11 @@ The above command let the program to:
 * Listen on port 9092, and forward to client indented host port 9092
 
 You will have to configure /etc/hosts, or DNS to point all original hosts to this host's IP address
+
+## Rulling with ACL rules (see rules.json)
+```bash
+$ java -jar tlsproxy-1.0-SNAPSHOT-all.jar -p 1443:443 -p 9092 -acl rules.json
+```
 
 Getting help:
 
