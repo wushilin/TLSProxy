@@ -13,7 +13,7 @@ import kotlin.concurrent.thread
 /**
  * This class is dedicated to connect to remote hosts and establish pipes for pipeline worker
  */
-class Connector(val listenPort: Int, val port: Int) {
+class Connector(val listenPort: Int, val port: Int, val acl:RuleSet?) {
     companion object {
         val logger = LoggerFactory.getLogger(Connector::class.java)
     }
@@ -85,6 +85,20 @@ class Connector(val listenPort: Int, val port: Int) {
                             safeClose(channel)
                             selectedKeys.remove()
                             continue
+                        }
+                        if(acl != null) {
+                            val clientAddressInet = channel.remoteAddress as InetSocketAddress
+                            val clientAddress = clientAddressInet.address
+                            val decision = acl.decide(clientAddress, sniHostName)
+                            if(decision != Decision.ALLOW) {
+                                logger.info("Rejected client ${formatC(channel)} trying to connect to ${sniHostName} due to ACL")
+                                key.cancel()
+                                safeClose(channel)
+                                selectedKeys.remove()
+                                continue
+                            } else {
+                                logger.info("Allowing client ${formatC(channel)} connect to ${sniHostName}")
+                            }
                         }
                         val remoteChannel = SocketChannel.open()
                         remoteChannel.configureBlocking(false)

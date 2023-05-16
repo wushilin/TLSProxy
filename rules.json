@@ -1,0 +1,31 @@
+{
+  "clients": {
+    "group1": [
+      "host:127.0.0.1",
+      "host:c02dr0c3md6t.home.arpa",
+      "cidr:192.168.144.0/24",
+      "pattern:192\\.168\\.144\\..*"
+    ]
+  },
+  "targets": {
+    "sgroup1": [
+      "host:www.google.com",
+      "pattern:.*\\.goo1gle\\.com"
+    ]
+  },
+  "rules": [
+    {
+      "client": ["group1"],
+      "target": ["sgroup1"],
+      "decision": "allow"
+    },
+    {
+      "client": ["$any"],
+      "target": ["$any"],
+      "decision": "deny"
+    },
+    {
+      "decision": "allow"
+    }
+  ]
+}

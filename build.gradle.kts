@@ -27,7 +27,9 @@ dependencies {
     implementation("com.github.ajalt:clikt:2.8.0")
     implementation("org.slf4j:slf4j-api:2.0.7")
     implementation("org.slf4j:slf4j-reload4j:2.0.7")
-
+    implementation("commons-net:commons-net:3.9.0")
+    implementation("com.jayway.jsonpath:json-path:2.8.0")
+    implementation("net.minidev:json-smart:2.4.10")
 //Thanks for using https://jar-download.com
 
 }
