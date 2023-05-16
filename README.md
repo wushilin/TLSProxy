@@ -81,6 +81,10 @@ Rules are evaluated in order, when first rule that gives a "allow", "deny" decis
 
 Pre-defined special host groups `$any`. They match any host, any client.
 
+When a rule has no client and target definition, `$any` will be used. `{ "decision": "allow" }` allows all connection when evaluated.
+
+Valid decisions are `allow`, `deny` and `none`. `none` will fall through to next rule.
+
 # Building
 Build this program by:
 
