@@ -48,7 +48,7 @@ data class Pipe(
      * Did either party close the connection
      */
     private fun isEOF(): Boolean {
-        val eof = isSrcEOF || isDestEOF
+        val eof = isSrcEOF && isDestEOF
         if(eof) {
             logger.debug("${id} EOF: src=$isSrcEOF dest=$isDestEOF")
         }
@@ -140,7 +140,7 @@ data class Pipe(
                 bytesDown.addAndGet(nread.toLong())
             }
             buffer.flip()
-            logger.debug("${id} $TAG -> buffer: Read $nread bytes")
+            logger.debug("${id} $TAG -> buffer: Read $nread bytes")/
             data.markHasData(buffer)
             // mute src read
             myKey.interestOps(srcKey.interestOps() and SelectionKey.OP_READ.inv())
