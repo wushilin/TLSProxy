@@ -110,14 +110,18 @@ data class Pipe(
         val otherKey = findPeer(myKey)
         buffer.clear()
         val isSrc = isSource(ch)
+        val isDest = isDestination(ch)
         val TAG = if(isSrc) {
             "SRC"
         } else {
             "DEST"
         }
-        if((isSrc && data.srcHasData())||(!isSrc && data.destHasData())) {
+        if((isSrc && data.srcHasData())||(isDest && data.destHasData())) {
             // can't read when data is on hold
+            // pause my read
             myKey.interestOps(myKey.interestOps() and SelectionKey.OP_READ.inv())
+            // wake up other write
+            otherKey.interestOps(otherKey.interestOps() or SelectionKey.OP_WRITE)
             // can't read
             return
         }
@@ -134,7 +138,6 @@ data class Pipe(
             logger.debug("${id} $TAG EOF")
             markEOF(ch)
             // No more reading SRC
-            myKey.interestOps(myKey.interestOps() and SelectionKey.OP_READ.inv())
             if (shouldClose()) {
                 logger.debug("${id} Should close socket")
                 cleanup()
@@ -148,6 +151,8 @@ data class Pipe(
             buffer.flip()
             logger.debug("${id} $TAG -> buffer: Read $nread bytes")
             data.markHasData(buffer)
+            // pause my read
+            myKey.interestOps(myKey.interestOps() and SelectionKey.OP_READ.inv())
             // wake up write intention
             otherKey.interestOps(destKey.interestOps() or SelectionKey.OP_WRITE)
         }
@@ -178,6 +183,7 @@ data class Pipe(
             logger.debug("${id} buffer -> $TAG: Written $size (remaining ${buffer.remaining()} bytes)")
             if (!buffer.hasRemaining()) {
                 // enable read for other key
+                myKey.interestOps(myKey.interestOps() and SelectionKey.OP_WRITE.inv())
                 otherKey.interestOps(otherKey.interestOps() or SelectionKey.OP_READ)
                 // data not available
                 // Enable read on my key again
