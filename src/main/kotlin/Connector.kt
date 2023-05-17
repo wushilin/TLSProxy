@@ -30,8 +30,8 @@ class Connector(val listenPort: Int, val port: Int, val acl:RuleSet?) {
         serverChannel.register(selector, SelectionKey.OP_ACCEPT)
 
         while (true) {
-            nselected = selector.select(5000)
-            if (nselected > 0) {
+            nselected = selector.select(10000)
+            if (nselected >= 0) {
                 logger.debug("Connector selected $nselected sockets (${selector.keys().size} keys in management)")
             } else {
                 continue
