@@ -140,7 +140,7 @@ data class Pipe(
                 bytesDown.addAndGet(nread.toLong())
             }
             buffer.flip()
-            logger.debug("${id} $TAG -> buffer: Read $nread bytes")/
+            logger.debug("${id} $TAG -> buffer: Read $nread bytes")
             data.markHasData(buffer)
             // mute src read
             myKey.interestOps(srcKey.interestOps() and SelectionKey.OP_READ.inv())
