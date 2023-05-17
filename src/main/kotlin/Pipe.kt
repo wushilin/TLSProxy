@@ -152,6 +152,7 @@ data class Pipe(
             data.markHasData(buffer)
             // pause my read
             // wake up write intention
+            myKey.interestOps(myKey.interestOps() and SelectionKey.OP_READ.inv())
             otherKey.interestOps(destKey.interestOps() or SelectionKey.OP_WRITE)
         }
     }
@@ -182,10 +183,10 @@ data class Pipe(
             if (!buffer.hasRemaining()) {
                 // enable read for other key
                 otherKey.interestOps(otherKey.interestOps() or SelectionKey.OP_READ)
+                myKey.interestOps(myKey.interestOps() and SelectionKey.OP_WRITE.inv())
                 // data not available
                 // Enable read on my key again
                 data.markHasNoData(buffer)
-                var dt = 0
             }
         } catch (e: IOException) {
             logger.error("Failed to write to $TAG: ${formatC(ch)}")
