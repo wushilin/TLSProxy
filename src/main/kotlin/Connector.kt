@@ -23,7 +23,6 @@ class Connector(val listenPort: Int, val port: Int, val acl:RuleSet?) {
     fun start() {
         logger.info("Starting listener on port $listenPort forwarding to SNI $port")
         var nselected:Int
-        var buffer = ByteBuffer.allocate(4096)
         var nread:Int
         val serverChannel = ServerSocketChannel.open()
         serverChannel.bind(InetSocketAddress(listenPort))
@@ -50,7 +49,7 @@ class Connector(val listenPort: Int, val port: Int, val acl:RuleSet?) {
                     // New Incoming connection
                     val clientChannel = (key.channel() as ServerSocketChannel).accept()
                     clientChannel.configureBlocking(false)
-                    clientChannel.register(selector, SelectionKey.OP_READ or SelectionKey.OP_WRITE)
+                    clientChannel.register(selector, SelectionKey.OP_READ)
                     selectedKeys.remove()
                     logger.info("Accepted new connection ${formatC(clientChannel, true)}")
                     continue
@@ -62,22 +61,19 @@ class Connector(val listenPort: Int, val port: Int, val acl:RuleSet?) {
                         pipeNull.handleCanRead(channel)
                     } else {
                         // initial connection!
-                        buffer.clear()
-                        nread = channel.read(buffer)
+                        val clientHello = ByteBuffer.allocate(1024)
+                        nread = channel.read(clientHello)
                         if (nread == -1) {
+                            logger.warn("Closing connection ${formatC(channel, true)} because client closed connection")
                             safeClose(channel)
                             key.cancel()
                             selectedKeys.remove()
                             //to close
                             continue
                         }
-                        val sniHostName = TLSUtil.extractSNI(buffer)
+                        val sniHostName = TLSUtil.extractSNI(clientHello)
 
-                        val clientHello = ByteBuffer.allocate(nread)
-                        buffer.flip()
-                        clientHello.put(buffer)
                         clientHello.flip()
-                        buffer.flip()
                         if (sniHostName == null || "" == sniHostName.trim()) {
                             logger.warn("Closing connection ${formatC(channel, true)} because no SNI info")
                             // not good. Close it
@@ -105,7 +101,7 @@ class Connector(val listenPort: Int, val port: Int, val acl:RuleSet?) {
                         try {
                             remoteChannel.connect(InetSocketAddress(sniHostName, port))
                             val remoteKey = remoteChannel.register(selector, SelectionKey.OP_CONNECT)
-                            val newPipe = Pipe(sniHostName, channel, remoteChannel, clientHello, DataBuffer(), key, remoteKey)
+                            val newPipe = Pipe(sniHostName, channel, remoteChannel, DataBuffer(clientHello, ByteBuffer.allocate(1024)), key, remoteKey)
                             remoteKey.attach(newPipe)
                             key.attach(newPipe)
                         } catch (t: Throwable) {
@@ -123,33 +119,23 @@ class Connector(val listenPort: Int, val port: Int, val acl:RuleSet?) {
                     try {
                         // remote channel connected. Now can construct pipe
                         if (channel.finishConnect()) {
-                            key.interestOps(SelectionKey.OP_READ or SelectionKey.OP_WRITE)
+                            key.interestOps(SelectionKey.OP_WRITE)
                             logger.info("Established outbound connection ${formatC(channel, false)}")
                         } else {
-                            key.cancel()
-                            pipeNull.srcKey.cancel()
-                            safeClose(pipeNull.src)
-                            safeClose(channel)
-                            logger.debug("Failed to connect to ${pipeNull.targetHost}. finishConnect() returned false")
+                            pipeNull.cleanup()
                             selectedKeys.remove()
+                            logger.debug("Failed to connect to ${pipeNull.targetHost}. finishConnect() returned false")
                             continue
                         }
                     } catch (t: Throwable) {
-                        logger.debug("Failed to connect to ${pipeNull.targetHost}. Cause ${t.javaClass} : ${t.message} ")
-                        key.cancel()
-                        pipeNull.srcKey.cancel()
-                        safeClose(pipeNull.src)
-                        safeClose(channel)
+                        pipeNull.cleanup()
                         selectedKeys.remove()
+                        logger.debug("Failed to connect to ${pipeNull.targetHost}. Cause ${t.javaClass} : ${t.message} ")
                         continue
                     }
                 }
                 if (key.isValid && key.isWritable) {
-                    val pipeNull = key.attachment() as Pipe?
-                    if(pipeNull == null) {
-                        selectedKeys.remove()
-                        continue
-                    }
+                    val pipeNull = key.attachment() as Pipe
                     pipeNull.handleCanWrite(channel)
                 }
                 selectedKeys.remove()

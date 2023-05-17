@@ -31,8 +31,18 @@ NOTE: It only support TLS with SNI enabled (e.g. most of the TLS protocols)
 # Does it breach the security TLS?
 No. It decodes the `clientHello` message, and the whole traffic of the actual protocol is still confidential.
 
-# ACL
+# Security and ACL
 The program supports ACL in simple JSON configuration.
+
+The ACL can allow you to define:
+
+* Client group by their hostname, IP or pattern.
+* Destination group by their hostname or pattern
+* Which client group can or cannot access destination group
+* Support wildcard of "$any" for both client groups and destination groups
+
+When `NO ACL` is specified, all connections will be allowed.
+When `ACL` is specified and no decision is met, connection will be `DENIED`
 
 Example:
 ```json

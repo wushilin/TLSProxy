@@ -1,49 +1,31 @@
 import java.lang.IllegalArgumentException
 import java.nio.ByteBuffer
 
-class DataBuffer {
-    private val srcBuffer = ByteBuffer.allocate(1024)
-    private val destBuffer = ByteBuffer.allocate(1024)
-    private var srcDataPresent = false
-    private var destDataPresent = false
+data class DataBuffer(val srcBuffer:ByteBuffer, val destBuffer:ByteBuffer) {
+    private var srcHasData = true
+    private var destHasData = false
 
-    fun borrowSrcForConsuming():ByteBuffer {
-        if(!srcDataPresent) {
-            throw IllegalArgumentException("Can't consume when data is not present")
+    fun markHasData(buffer:ByteBuffer) {
+        mark(buffer, true)
+    }
+
+    fun markHasNoData(buffer:ByteBuffer) {
+        mark(buffer, false)
+    }
+
+    fun hasData():Boolean {
+        return srcHasData || destHasData
+    }
+
+    override fun toString():String {
+        return "Data: srcBuffer: $srcBuffer destBuffer $destBuffer"
+    }
+    private fun mark(buffer:ByteBuffer, flag:Boolean) {
+        if(buffer === srcBuffer) {
+            srcHasData = flag
+        } else if(buffer === destBuffer) {
+            destHasData = flag
         }
-        srcDataPresent = false
-        return srcBuffer
-    }
 
-    fun borrowDestForConsuming():ByteBuffer {
-        if(!destDataPresent) {
-            throw IllegalArgumentException("Can't consume when data is not present")
-        }
-        destDataPresent = false
-        return destBuffer
-    }
-
-    fun borrowSrcForProducing():ByteBuffer {
-        if(srcDataPresent) {
-            throw IllegalArgumentException("Can't produce when data is already present")
-        }
-        srcDataPresent = true
-        return srcBuffer
-    }
-
-    fun borrowDestForProducing():ByteBuffer {
-        if(destDataPresent) {
-            throw IllegalArgumentException("Can't produce when data is already present")
-        }
-        destDataPresent = true
-        return destBuffer
-    }
-
-    fun srcHasData():Boolean {
-        return srcDataPresent
-    }
-
-    fun destHasData():Boolean {
-        return destDataPresent
     }
 }
