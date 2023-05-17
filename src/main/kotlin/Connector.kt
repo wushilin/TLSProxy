@@ -62,6 +62,8 @@ class Connector(val listenPort: Int, val port: Int, val acl:RuleSet?) {
                     } else {
                         // initial connection!
                         val clientHello = ByteBuffer.allocate(1024)
+                        // temporarily don't read from the channel
+                        key.interestOps(key.interestOps() and SelectionKey.OP_READ.inv())
                         nread = channel.read(clientHello)
                         if (nread == -1) {
                             logger.warn("Closing connection ${formatC(channel, true)} because client closed connection")
