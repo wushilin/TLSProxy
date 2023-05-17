@@ -121,7 +121,6 @@ data class Pipe(
             // pause my read
             myKey.interestOps(myKey.interestOps() and SelectionKey.OP_READ.inv())
             // wake up other write
-            otherKey.interestOps(otherKey.interestOps() or SelectionKey.OP_WRITE)
             // can't read
             return
         }
@@ -182,7 +181,6 @@ data class Pipe(
             logger.debug("${id} buffer -> $TAG: Written $size (remaining ${buffer.remaining()} bytes)")
             if (!buffer.hasRemaining()) {
                 // enable read for other key
-                myKey.interestOps(myKey.interestOps() and SelectionKey.OP_WRITE.inv())
                 otherKey.interestOps(otherKey.interestOps() or SelectionKey.OP_READ)
                 // data not available
                 // Enable read on my key again
