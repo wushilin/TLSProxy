@@ -22,7 +22,7 @@
     {
       "client": ["$any"],
       "target": ["$any"],
-      "decision": "deny"
+      "decision": "none"
     },
     {
       "decision": "allow"
