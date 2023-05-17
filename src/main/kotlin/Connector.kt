@@ -80,7 +80,7 @@ class Connector(val listenPort: Int, val port: Int, val acl:RuleSet?) {
                             logger.warn("Unable to parse SNI hostname ${ex.javaClass} : ${ex.message}")
                         }
                         clientHello.flip()
-                        if (sniHostName == null || "" == sniHostName.trim()) {
+                        if ("" == sniHostName.trim()) {
                             logger.warn("Closing connection ${formatC(channel, true)} because no SNI info")
                             // not good. Close it
                             key.cancel()

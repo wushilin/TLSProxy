@@ -1,14 +1,16 @@
 #!/bin/sh
 
-gradle clean jar
+gradle clean shadowJar
 VERSION=`cat build.gradle.kts | grep "^version" | sed 's/ //g' | sed 's/=/ /g'| awk '{print $2}' | sed "s/'//g" | sed 's/"//g'`
 echo $VERSION
 PACKAGE_NAME=tls-proxy-$VERSION
 DIR=build
 PACKAGE=$DIR/$PACKAGE_NAME
+
 mkdir $PACKAGE
 cp build/libs/*.jar $PACKAGE
 cp log4j.properties $PACKAGE
 cp rules.json $PACKAGE
+cp run.sh $PACKAGE
 tar zcvf $PACKAGE.tar.gz -C $DIR $PACKAGE_NAME
 rm -rf $PACKAGE
