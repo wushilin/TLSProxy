@@ -152,7 +152,6 @@ data class Pipe(
             logger.debug("${id} $TAG -> buffer: Read $nread bytes")
             data.markHasData(buffer)
             // pause my read
-            myKey.interestOps(myKey.interestOps() and SelectionKey.OP_READ.inv())
             // wake up write intention
             otherKey.interestOps(destKey.interestOps() or SelectionKey.OP_WRITE)
         }
