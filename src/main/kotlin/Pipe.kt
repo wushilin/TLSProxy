@@ -149,8 +149,6 @@ data class Pipe(
             buffer.flip()
             logger.debug("${id} $TAG -> buffer: Read $nread bytes")
             data.markHasData(buffer)
-            // mute src read
-            myKey.interestOps(srcKey.interestOps() and SelectionKey.OP_READ.inv())
             // wake up write intention
             otherKey.interestOps(destKey.interestOps() or SelectionKey.OP_WRITE)
         }
@@ -161,12 +159,13 @@ data class Pipe(
         val myKey = findMyKey(ch)
         val otherKey = findPeer(myKey)
         val isSrc = isSource(ch)
+        val isDest = isDestination(ch)
         val TAG = if (isSrc) {
             "SRC"
         } else {
             "DEST"
         }
-        if((isSrc && !!data.destHasData())||(!isSrc && !!data.srcHasData())) {
+        if((isSrc && !!data.destHasData())||(isDest && !!data.srcHasData())) {
             // can't read when data is on hold
             myKey.interestOps(myKey.interestOps() and SelectionKey.OP_WRITE.inv())
             otherKey.interestOps(otherKey.interestOps() or SelectionKey.OP_READ)
@@ -181,12 +180,7 @@ data class Pipe(
                 if(!isOtherEOF(ch)) {
                     otherKey.interestOps(otherKey.interestOps() or SelectionKey.OP_READ)
                 }
-                // Disable write for my key
-                myKey.interestOps(myKey.interestOps() and SelectionKey.OP_WRITE.inv())
                 // Enable read on my key again
-                if(!isSelfEOF(ch)) {
-                    myKey.interestOps(myKey.interestOps() or SelectionKey.OP_READ)
-                }
                 data.markHasNoData(buffer)
             }
         } catch (e: IOException) {
