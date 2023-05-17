@@ -48,7 +48,7 @@ data class Pipe(
      * Did either party close the connection
      */
     private fun isEOF(): Boolean {
-        val eof = isSrcEOF && isDestEOF
+        val eof = isSrcEOF || isDestEOF
         if(eof) {
             logger.debug("${id} EOF: src=$isSrcEOF dest=$isDestEOF")
         }
@@ -115,6 +115,13 @@ data class Pipe(
         } else {
             "DEST"
         }
+        if((isSrc && data.srcHasData())||(!isSrc && data.destHasData())) {
+            // can't read when data is on hold
+            myKey.interestOps(myKey.interestOps() and SelectionKey.OP_READ.inv())
+            otherKey.interestOps(otherKey.interestOps() or SelectionKey.OP_WRITE)
+            // can't read
+            return
+        }
         var nread: Int
         try {
             nread = ch.read(buffer)
@@ -158,6 +165,13 @@ data class Pipe(
             "SRC"
         } else {
             "DEST"
+        }
+        if((isSrc && !!data.destHasData())||(!isSrc && !!data.srcHasData())) {
+            // can't read when data is on hold
+            myKey.interestOps(myKey.interestOps() and SelectionKey.OP_WRITE.inv())
+            otherKey.interestOps(otherKey.interestOps() or SelectionKey.OP_READ)
+            // can't read
+            return
         }
         try {
             val size = ch.write(buffer)

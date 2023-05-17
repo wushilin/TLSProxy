@@ -123,10 +123,13 @@ class Connector(val listenPort: Int, val port: Int, val acl:RuleSet?) {
                 }
                 if (key.isValid && key.isConnectable) {
                     val pipeNull = key.attachment() as Pipe
+                    val peerKey = pipeNull.findPeer(key)
                     try {
                         // remote channel connected. Now can construct pipe
                         if (channel.finishConnect()) {
-                            key.interestOps(SelectionKey.OP_WRITE)
+                            // dest must be read write
+                            key.interestOps(SelectionKey.OP_READ or SelectionKey.OP_WRITE)
+                            peerKey.interestOps(SelectionKey.OP_READ or SelectionKey.OP_WRITE)
                             logger.info("Established outbound connection ${formatC(channel, false)}")
                         } else {
                             pipeNull.cleanup()

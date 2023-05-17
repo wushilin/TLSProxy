@@ -17,6 +17,14 @@ data class DataBuffer(val srcBuffer:ByteBuffer, val destBuffer:ByteBuffer) {
         return srcHasData || destHasData
     }
 
+    fun srcHasData():Boolean {
+        return srcHasData
+    }
+
+    fun destHasData():Boolean {
+        return destHasData
+    }
+
     override fun toString():String {
         return "Data: srcBuffer: $srcBuffer destBuffer $destBuffer"
     }
