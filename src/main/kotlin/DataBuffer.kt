@@ -2,7 +2,7 @@ import java.lang.IllegalArgumentException
 import java.nio.ByteBuffer
 
 data class DataBuffer(val srcBuffer:ByteBuffer, val destBuffer:ByteBuffer) {
-    private var srcHasData = srcBuffer.hasRemaining()
+    private var srcHasData = true
     private var destHasData = false
 
     fun markHasData(buffer:ByteBuffer) {

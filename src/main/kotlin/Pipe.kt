@@ -164,22 +164,25 @@ data class Pipe(
         } else {
             "DEST"
         }
-        if((isSrc && !!data.destHasData())||(isDest && !!data.srcHasData())) {
+        if((isSrc && !data.destHasData())||(isDest && !data.srcHasData())) {
             // can't read when data is on hold
             myKey.interestOps(myKey.interestOps() and SelectionKey.OP_WRITE.inv())
             // can't read
+            if(shouldClose()) {
+                cleanup()
+            }
             return
         }
         try {
             val size = ch.write(buffer)
-            logger.debug("${id} buffer -> $TAG: Written $size bytes")
+            logger.debug("${id} buffer -> $TAG: Written $size (remaining ${buffer.remaining()} bytes)")
             if (!buffer.hasRemaining()) {
                 // enable read for other key
-                if(!isOtherEOF(ch)) {
-                    otherKey.interestOps(otherKey.interestOps() or SelectionKey.OP_READ)
-                }
+                otherKey.interestOps(otherKey.interestOps() or SelectionKey.OP_READ)
+                // data not available
                 // Enable read on my key again
                 data.markHasNoData(buffer)
+                var dt = 0
             }
         } catch (e: IOException) {
             logger.error("Failed to write to $TAG: ${formatC(ch)}")
