@@ -28,8 +28,8 @@ data class Pipe(
     private var isDestEOF = false
     val id = generateId()
 
-    val bytesUp = AtomicLong(1L)
-    val bytesDown = AtomicLong(1L)
+    val bytesUp = AtomicLong(data.srcBuffer.remaining().toLong())
+    val bytesDown = AtomicLong(0L)
     val startTime = System.currentTimeMillis()
 
     init {
@@ -134,7 +134,11 @@ data class Pipe(
                 cleanup()
             }
         } else if(nread > 0) {
-            bytesUp.addAndGet(nread.toLong())
+            if(isSrc) {
+                bytesUp.addAndGet(nread.toLong())
+            } else {
+                bytesDown.addAndGet(nread.toLong())
+            }
             buffer.flip()
             logger.debug("${id} $TAG -> buffer: Read $nread bytes")
             data.markHasData(buffer)
