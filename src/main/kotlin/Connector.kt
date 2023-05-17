@@ -107,7 +107,7 @@ class Connector(val listenPort: Int, val port: Int, val acl:RuleSet?) {
                         try {
                             remoteChannel.connect(InetSocketAddress(sniHostName, port))
                             val remoteKey = remoteChannel.register(selector, SelectionKey.OP_CONNECT)
-                            val newPipe = Pipe(sniHostName, channel, remoteChannel, DataBuffer(clientHello, ByteBuffer.allocate(1024)), key, remoteKey)
+                            val newPipe = Pipe(sniHostName, channel, remoteChannel, DataBuffer(clientHello, ByteBuffer.allocate(1024), true), key, remoteKey)
                             logger.info("My Key ops: ${key.interestOps()} other Key ops: ${remoteKey.interestOps()}")
                             remoteKey.attach(newPipe)
                             key.attach(newPipe)
