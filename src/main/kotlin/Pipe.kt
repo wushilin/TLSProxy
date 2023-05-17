@@ -120,7 +120,6 @@ data class Pipe(
             // can't read when data is on hold
             // pause my read
             myKey.interestOps(myKey.interestOps() and SelectionKey.OP_READ.inv())
-            otherKey.interestOps(otherKey.interestOps() or SelectionKey.OP_WRITE)
             // wake up other write
             // can't read
             return
@@ -172,7 +171,6 @@ data class Pipe(
         if((isSrc && !data.destHasData())||(isDest && !data.srcHasData())) {
             // can't read when data is on hold
             myKey.interestOps(myKey.interestOps() and SelectionKey.OP_WRITE.inv())
-            otherKey.interestOps(otherKey.interestOps() or SelectionKey.OP_READ)
             // can't read
             if(shouldClose()) {
                 cleanup()
